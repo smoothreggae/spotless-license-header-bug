@@ -1,0 +1,54 @@
+plugins {
+    id "application"
+    id "eclipse"
+    id "java"
+    id "com.diffplug.spotless" version "5.4.0"
+}
+
+def javaVersion = JavaVersion.VERSION_1_8;
+sourceCompatibility = javaVersion
+targetCompatibility = javaVersion
+
+repositories {
+    jcenter()
+}
+
+task enforceJavaVersion {
+    doLast {
+        def foundVersion = JavaVersion.current();
+        if (foundVersion != javaVersion)
+            throw new IllegalStateException("You are using an incorrect version ("
+                + foundVersion
+                + "). Please set JAVA_HOME to point to a valid installation of Java "
+                + javaVersion);
+    }
+}
+
+compileJava {
+    dependsOn enforceJavaVersion
+    options.encoding = 'UTF-8'
+}
+
+spotless {
+    java {
+        target 'src/main/**/*.java'
+        removeUnusedImports()
+        endWithNewline()
+        indentWithSpaces(4)
+        licenseHeaderFile rootProject.file('src/spotless/license-template.java')
+        trimTrailingWhitespace()
+    }
+    format 'misc', {
+        target project.fileTree(project.rootDir) {
+            include '**/.gitignore', '**/*.gradle', '**/*.md', 'src/spotless/**'
+            exclude '**/build/**'
+            exclude '**/bin/**'
+            exclude '**/out/**'
+            exclude '.gradle/**'
+            exclude '.idea/**'
+        }
+        endWithNewline()
+        indentWithSpaces(4)
+        trimTrailingWhitespace()
+    }
+}
